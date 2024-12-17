@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Matching Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f4f4f9;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .game-container {
+      display: grid;
+      gap: 10px;
+      margin: 20px auto;
+      width: 400px; /* Limit the width for better layout */
+    }
+
+    .card {
+      background-color: #333;
+      color: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .card.flipped, .card.matched {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+
+    .card.matched {
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>Memory Matching Game</h1>
+    <label for="difficulty-select">Choose Difficulty:</label>
+    <select id="difficulty-select">
+      <option value="easy">Easy</option>
+      <option value="medium">Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+    <div class="game-container" id="game"></div>
+    <button id="resetBtn">Restart Game</button>
+  </div>
+
+  <script>
+    const icons = ['🍎', '🍎', '🚀', '🚀', '🎩', '🎩', '🦄', '🦄', '🎲', '🎲', '🎸', '🎸', '⚽', '⚽', '🧩', '🧩'];
+    const iconMap = {
+      'easy': 8,
+      'medium': 12,
+      'hard': 16
+    };
+
+    const gameContainer = document.getElementById('game');
+    let flippedCards = [];
+    let matchedCards = 0;
+    let canFlip = true; // Track if new flips are allowed
+
+    // Shuffle the cards
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    // Initialize the game
+    function initGame(difficulty) {
+      const numCards = iconMap[difficulty];
+      const shuffledIcons = shuffle(icons.slice(0, numCards));
+      
+      // Clear previous game board
+      gameContainer.innerHTML = '';
+
+      // Determine rows and columns
+      const cols = Math.floor(Math.sqrt(numCards)); // Calculate number of columns
+      const rows = Math.ceil(numCards / cols);     // Calculate number of rows
+      gameContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`; // Set grid template columns
+      gameContainer.style.gridTemplateRows = `repeat(${rows}, 100px)`;   // Set grid template rows
+
+      // Create cards
+      shuffledIcons.forEach((icon) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.icon = icon;
+        card.textContent = ''; // Hide the icon initially
+        card.addEventListener('click', flipCard);
+        gameContainer.appendChild(card);
+      });
+    }
+
+    // Flip a card
+    function flipCard() {
+      if (!canFlip || this.classList.contains('flipped') || this.classList.contains('matched') || flippedCards.length === 2) return;
+
+      this.classList.add('flipped');
+      this.textContent = this.dataset.icon; // Show icon
+      flippedCards.push(this);
+
+      if (flippedCards.length === 2) {
+        checkMatch();
+      }
+    }
+
+    // Check if the flipped cards match
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      if (card1.dataset.icon === card2.dataset.icon) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedCards += 2;
+
+        if (matchedCards === icons.length) {
+          setTimeout(() => alert('You win! 🎉'), 500);
+        }
+      } else {
+        canFlip = false; // Disable new flips until this pair is fully reset
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          card1.textContent = ''; // Hide the icon again
+          card2.textContent = ''; // Hide the icon again
+          canFlip = true; // Re-enable flips
+        }, 1000);
+      }
+      flippedCards = [];
+    }
+
+    // Handle difficulty selection
+    document.getElementById('difficulty-select').addEventListener('change', (e) => {
+      initGame(e.target.value);
+    });
+
+    // Reset button
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      gameContainer.innerHTML = ''; // Clear the game board
+      flippedCards = []; // Reset flipped cards
+      matchedCards = 0; // Reset matched cards count
+      initGame(document.getElementById('difficulty-select').value); // Reinitialize the game
+    });
+
+    // Initialize game with default difficulty
+    initGame(document.getElementById('difficulty-select').value);
+  </script>
+</body>
+</html>
